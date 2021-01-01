@@ -163,6 +163,6 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/zigbee_helpers.o: \
  components/libraries/util/nrf_assert.h modules/nrfx/soc/nrfx_coredep.h \
  modules/nrfx/soc/nrfx_atomic.h components/libraries/util/sdk_resources.h \
  modules/nrfx/drivers/nrfx_errors.h components/boards/boards.h \
- components/boards/pca10056.h modules/nrfx/drivers/include/nrfx_power.h \
+ custom_board.h modules/nrfx/drivers/include/nrfx_power.h \
  modules/nrfx/hal/nrf_power.h \
  modules/nrfx/drivers/include/nrfx_power_clock.h

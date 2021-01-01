@@ -38,5 +38,4 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/boards.o: \
  modules/nrfx/soc/nrfx_coredep.h modules/nrfx/soc/nrfx_atomic.h \
  components/libraries/util/sdk_errors.h \
  components/libraries/util/sdk_resources.h \
- modules/nrfx/drivers/nrfx_errors.h \
- /home/gusenkovs/zigbee/ground_humidity_zigbee/components/boards/pca10056.h
+ modules/nrfx/drivers/nrfx_errors.h custom_board.h

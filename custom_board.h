@@ -58,7 +58,8 @@ extern "C" {
 #define TX_PIN_NUMBER  3
 #define HWFC           false
 
-
+#define SER_APP_RX_PIN              NRF_GPIO_PIN_MAP(0,28)    // UART RX pin number.
+#define SER_APP_TX_PIN              NRF_GPIO_PIN_MAP(0,3)    // UART TX pin number.
 
 #ifdef __cplusplus
 }

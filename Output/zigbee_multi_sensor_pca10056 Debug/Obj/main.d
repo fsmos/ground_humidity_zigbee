@@ -167,7 +167,7 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/main.o: \
  modules/nrfx/soc/nrfx_irqs_nrf52840.h \
  components/libraries/util/nrf_assert.h modules/nrfx/soc/nrfx_coredep.h \
  modules/nrfx/soc/nrfx_atomic.h components/libraries/util/sdk_resources.h \
- modules/nrfx/drivers/nrfx_errors.h components/boards/pca10056.h \
+ modules/nrfx/drivers/nrfx_errors.h custom_board.h \
  components/libraries/button/app_button.h \
  components/libraries/log/nrf_log_default_backends.h \
  /home/gusenkovs/zigbee/ground_humidity_zigbee/zb_multi_sensor.h \
@@ -200,5 +200,4 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/main.o: \
  /home/gusenkovs/zigbee/ground_humidity_zigbee/ADC.h \
  integration/nrfx/legacy/nrf_drv_saadc.h \
  modules/nrfx/drivers/include/nrfx_saadc.h modules/nrfx/hal/nrf_saadc.h \
- /home/gusenkovs/zigbee/ground_humidity_zigbee/PWS.h \
- /home/gusenkovs/zigbee/ground_humidity_zigbee/custom_board.h
+ /home/gusenkovs/zigbee/ground_humidity_zigbee/PWS.h

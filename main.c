@@ -15,7 +15,6 @@
 #include "nrf_802154.h"
 #include "ADC.h"
 #include "PWS.h"
-#include "custom_board.h"
 
 #define IEEE_CHANNEL_MASK                  ZB_TRANSCEIVER_ALL_CHANNELS_MASK     /**< Scan all channel to find the coordinator. */
 #define ERASE_PERSISTENT_CONFIG            ZB_FALSE                             /**< Do not erase NVRAM to save the network parameters after device reboot or power-off. */
