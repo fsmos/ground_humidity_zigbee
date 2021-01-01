@@ -15,7 +15,7 @@ extern "C" {
 #define SENSOR_INIT_BASIC_STACK_VERSION     10                                  /**< Version of the implementation of the Zigbee stack (1 byte). */
 #define SENSOR_INIT_BASIC_HW_VERSION        1                                   /**< Version of the hardware of the device (1 byte). */
 #define SENSOR_INIT_BASIC_MANUF_NAME        "FSM"                            /**< Manufacturer name (32 bytes). */
-#define SENSOR_INIT_BASIC_MODEL_ID          "Ground humidity"                   /**< Model number assigned by the manufacturer (32-bytes long string). */
+#define SENSOR_INIT_BASIC_MODEL_ID          "ground_humidity"                   /**< Model number assigned by the manufacturer (32-bytes long string). */
 #define SENSOR_INIT_BASIC_DATE_CODE         "20200101"                          /**< Date provided by the manufacturer of the device in ISO 8601 format (YYYYMMDD), for the first 8 bytes. The remaining 8 bytes are manufacturer-specific. */
 #define SENSOR_INIT_BASIC_POWER_SOURCE      ZB_ZCL_BASIC_POWER_SOURCE_BATTERY   /**< Type of power source or sources available for the device. For possible values, see section 3.2.2.2.8 of the ZCL specification. */
 #define SENSOR_INIT_BASIC_LOCATION_DESC     "Murom"                             /**< Description of the physical location of the device (16 bytes). You can modify it during the commisioning process. */
