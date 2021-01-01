@@ -107,7 +107,11 @@
     </folder>
     <folder Name="Application">
       <file file_name="./main.c" />
-      <file file_name="../config/sdk_config.h" />
+      <file file_name="./config/sdk_config.h" />
+      <file file_name="zb_multi_sensor.h" />
+      <file file_name="custom_board.h" />
+      <file file_name="ADC.c" />
+      <file file_name="PWS.c" />
     </folder>
     <folder Name="None">
       <file file_name="./modules/nrfx/mdk/ses_startup_nrf52840.s" />

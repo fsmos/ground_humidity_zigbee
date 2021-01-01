@@ -169,7 +169,6 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/main.o: \
  modules/nrfx/soc/nrfx_atomic.h components/libraries/util/sdk_resources.h \
  modules/nrfx/drivers/nrfx_errors.h components/boards/pca10056.h \
  components/libraries/button/app_button.h \
- components/libraries/sensorsim/sensorsim.h \
  components/libraries/log/nrf_log_default_backends.h \
  /home/gusenkovs/zigbee/ground_humidity_zigbee/zb_multi_sensor.h \
  external/zboss/addons/zboss_api_addons.h \
@@ -186,4 +185,20 @@ Output/zigbee_multi_sensor_pca10056\ Debug/Obj/main.o: \
  external/zboss/addons/zcl/zb_zcl_temp_measurement_addons.h \
  external/zboss/addons/zcl/zb_zcl_ota_upgrade_addons.h \
  external/zboss/addons/zboss_api_af_addons.h \
- components/zigbee/pressure_cluster/zb_zcl_pressure_measurement.h
+ /home/gusenkovs/zigbee/ground_humidity_zigbee/zigbee_lacking.h \
+ external/zboss/include/zcl/zb_zcl_power_config.h \
+ external/zboss/include/zcl/zb_zcl_rel_humidity_measurement.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/nrf_802154.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/nrf_802154_config.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/nrf_802154_types.h \
+ modules/nrfx/hal/nrf_radio.h modules/nrfx/hal/nrf_ppi.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/fem/nrf_fem_protocol_api.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/fem/nrf_fem_control_config.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/fem/three_pin_gpio/nrf_fem_config.h \
+ external/nRF-IEEE-802.15.4-radio-driver/src/fem/nrf_fem_protocol_legacy_api.h \
+ modules/nrfx/hal/nrf_timer.h \
+ /home/gusenkovs/zigbee/ground_humidity_zigbee/ADC.h \
+ integration/nrfx/legacy/nrf_drv_saadc.h \
+ modules/nrfx/drivers/include/nrfx_saadc.h modules/nrfx/hal/nrf_saadc.h \
+ /home/gusenkovs/zigbee/ground_humidity_zigbee/PWS.h \
+ /home/gusenkovs/zigbee/ground_humidity_zigbee/custom_board.h

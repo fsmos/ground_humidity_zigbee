@@ -58,6 +58,8 @@
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/nrfx_uarte.o"
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/bsp.o"
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/main.o"
+"Output/zigbee_multi_sensor_pca10056 Debug/Obj/ADC.o"
+"Output/zigbee_multi_sensor_pca10056 Debug/Obj/PWS.o"
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/ses_startup_nrf52840.o"
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/ses_startup_nrf_common.o"
 "Output/zigbee_multi_sensor_pca10056 Debug/Obj/system_nrf52840.o"

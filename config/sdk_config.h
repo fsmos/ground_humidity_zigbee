@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2017 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -69,13 +69,13 @@
 // </h> 
 //==========================================================
 
-// <h> zigbee_stack - ZBOSS Zigbee stack
+// <h> zigbee_stack - ZBOSS ZigBee stack
 
 //==========================================================
-// <o> ZIGBEE_CHANNEL - 802.15.4 channel used by Zigbee  <11-26> 
+// <o> ZIGBEE_CHANNEL - 802.15.4 channel used by ZigBee  <11-26> 
 
 
-// <i> 802.15.4 channel used by Zigbee. Defaults to 16.
+// <i> 802.15.4 channel used by ZigBee. Defaults to 16.
 
 #ifndef ZIGBEE_CHANNEL
 #define ZIGBEE_CHANNEL 16
@@ -116,14 +116,7 @@
 #define ZIGBEE_NVRAM_PAGE_COUNT 2
 #endif
 
-// <o> ZIGBEE_NVRAM_CONFIG_PAGE_SIZE - Size of logical Zigbee NVRAM production configuration page in bytes 
-// <i> The size must be a multiply of physical page size
-
-#ifndef ZIGBEE_NVRAM_CONFIG_PAGE_SIZE
-#define ZIGBEE_NVRAM_CONFIG_PAGE_SIZE 4096
-#endif
-
-// <o> ZIGBEE_NVRAM_CONFIG_PAGE_COUNT - Number of Zigbee NVRAM production configuration pages 
+// <o> ZIGBEE_NVRAM_CONFIG_PAGE_COUNT - Number of Zigbee NVRAM configuration pages 
 #ifndef ZIGBEE_NVRAM_CONFIG_PAGE_COUNT
 #define ZIGBEE_NVRAM_CONFIG_PAGE_COUNT 1
 #endif
@@ -922,7 +915,7 @@
 // <196609=> External Full Swing 
 
 #ifndef CLOCK_CONFIG_LF_SRC
-#define CLOCK_CONFIG_LF_SRC 1
+#define CLOCK_CONFIG_LF_SRC 0
 #endif
 
 // <q> CLOCK_CONFIG_LF_CAL_ENABLED  - Calibration enable for LF Clock Source
@@ -1232,7 +1225,7 @@
 // <31=> 1024 Hz 
 
 #ifndef APP_TIMER_CONFIG_RTC_FREQUENCY
-#define APP_TIMER_CONFIG_RTC_FREQUENCY 1
+#define APP_TIMER_CONFIG_RTC_FREQUENCY 0
 #endif
 
 // <o> APP_TIMER_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -1576,13 +1569,6 @@
 #define NRF_SECTION_ITER_ENABLED 1
 #endif
 
-// <q> NRF_SORTLIST_ENABLED  - nrf_sortlist - Sorted list
- 
-
-#ifndef NRF_SORTLIST_ENABLED
-#define NRF_SORTLIST_ENABLED 1
-#endif
-
 // <q> NRF_STRERROR_ENABLED  - nrf_strerror - Library for converting error code to string.
  
 
@@ -1627,13 +1613,6 @@
 #define NRF_FPRINTF_FLAG_AUTOMATIC_CR_ON_LF_ENABLED 1
 #endif
 
-// <q> NRF_FPRINTF_DOUBLE_ENABLED  - Enable IEEE-754 double precision formatting.
- 
-
-#ifndef NRF_FPRINTF_DOUBLE_ENABLED
-#define NRF_FPRINTF_DOUBLE_ENABLED 0
-#endif
-
 // </h> 
 //==========================================================
 
@@ -1650,7 +1629,7 @@
 #endif
 // <o> NRF_LOG_BACKEND_UART_TX_PIN - UART TX pin 
 #ifndef NRF_LOG_BACKEND_UART_TX_PIN
-#define NRF_LOG_BACKEND_UART_TX_PIN 6
+#define NRF_LOG_BACKEND_UART_TX_PIN 3
 #endif
 
 // <o> NRF_LOG_BACKEND_UART_BAUDRATE  - Default Baudrate
@@ -1673,7 +1652,7 @@
 // <268435456=> 1000000 baud 
 
 #ifndef NRF_LOG_BACKEND_UART_BAUDRATE
-#define NRF_LOG_BACKEND_UART_BAUDRATE 268435456
+#define NRF_LOG_BACKEND_UART_BAUDRATE 30801920
 #endif
 
 // <o> NRF_LOG_BACKEND_UART_TEMP_BUFFER_SIZE - Size of buffer for partially processed strings. 
@@ -3139,73 +3118,6 @@
 // <h> nrf_log in nRF_Libraries 
 
 //==========================================================
-// <e> APP_BUTTON_CONFIG_LOG_ENABLED - Enables logging in the module.
-//==========================================================
-#ifndef APP_BUTTON_CONFIG_LOG_ENABLED
-#define APP_BUTTON_CONFIG_LOG_ENABLED 0
-#endif
-// <o> APP_BUTTON_CONFIG_LOG_LEVEL  - Default Severity level
- 
-// <0=> Off 
-// <1=> Error 
-// <2=> Warning 
-// <3=> Info 
-// <4=> Debug 
-
-#ifndef APP_BUTTON_CONFIG_LOG_LEVEL
-#define APP_BUTTON_CONFIG_LOG_LEVEL 3
-#endif
-
-// <o> APP_BUTTON_CONFIG_INITIAL_LOG_LEVEL  - Initial severity level if dynamic filtering is enabled.
- 
-
-// <i> If module generates a lot of logs, initial log level can
-// <i> be decreased to prevent flooding. Severity level can be
-// <i> increased on instance basis.
-// <0=> Off 
-// <1=> Error 
-// <2=> Warning 
-// <3=> Info 
-// <4=> Debug 
-
-#ifndef APP_BUTTON_CONFIG_INITIAL_LOG_LEVEL
-#define APP_BUTTON_CONFIG_INITIAL_LOG_LEVEL 3
-#endif
-
-// <o> APP_BUTTON_CONFIG_INFO_COLOR  - ANSI escape code prefix.
- 
-// <0=> Default 
-// <1=> Black 
-// <2=> Red 
-// <3=> Green 
-// <4=> Yellow 
-// <5=> Blue 
-// <6=> Magenta 
-// <7=> Cyan 
-// <8=> White 
-
-#ifndef APP_BUTTON_CONFIG_INFO_COLOR
-#define APP_BUTTON_CONFIG_INFO_COLOR 0
-#endif
-
-// <o> APP_BUTTON_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
- 
-// <0=> Default 
-// <1=> Black 
-// <2=> Red 
-// <3=> Green 
-// <4=> Yellow 
-// <5=> Blue 
-// <6=> Magenta 
-// <7=> Cyan 
-// <8=> White 
-
-#ifndef APP_BUTTON_CONFIG_DEBUG_COLOR
-#define APP_BUTTON_CONFIG_DEBUG_COLOR 0
-#endif
-
-// </e>
-
 // <e> APP_TIMER_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef APP_TIMER_CONFIG_LOG_ENABLED
@@ -4646,68 +4558,114 @@
 #endif
 
 // </h> 
+
+// </e>
+// <e> NRFX_SAADC_ENABLED - nrfx_saadc - SAADC peripheral driver
 //==========================================================
+#ifndef NRFX_SAADC_ENABLED
+#define NRFX_SAADC_ENABLED 1
+#endif
+// <o> NRFX_SAADC_CONFIG_RESOLUTION  - Resolution
+ 
+// <0=> 8 bit 
+// <1=> 10 bit 
+// <2=> 12 bit 
+// <3=> 14 bit 
 
-// <h> nRF_drv_radio_802_15_4 
-
-//==========================================================
-// <h> nrf_fem_config - nRF 21540 FEM configuration options
-
-//==========================================================
-// <o> FEM_CONTROL_DEFAULT_PA_PIN - Pin number, controlling Power Amplifier of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_PA_PIN
-#define FEM_CONTROL_DEFAULT_PA_PIN 22
+#ifndef NRFX_SAADC_CONFIG_RESOLUTION
+#define NRFX_SAADC_CONFIG_RESOLUTION 2
 #endif
 
-// <o> FEM_CONTROL_DEFAULT_LNA_PIN - Pin number, controlling Low Noise Amplifier of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_LNA_PIN
-#define FEM_CONTROL_DEFAULT_LNA_PIN 19
+// <o> NRFX_SAADC_CONFIG_OVERSAMPLE  - Sample period
+ 
+// <0=> Disabled 
+// <1=> 2x 
+// <2=> 4x 
+// <3=> 8x 
+// <4=> 16x 
+// <5=> 32x 
+// <6=> 64x 
+// <7=> 128x 
+// <8=> 256x 
+
+#ifndef NRFX_SAADC_CONFIG_OVERSAMPLE
+#define NRFX_SAADC_CONFIG_OVERSAMPLE 0
 #endif
 
-// <o> FEM_CONTROL_DEFAULT_PDN_PIN - Pin number, controlling Power Down pin of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_PDN_PIN
-#define FEM_CONTROL_DEFAULT_PDN_PIN 23
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_MODE_PIN - Pin number, selecting Mode of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_MODE_PIN
-#define FEM_CONTROL_DEFAULT_MODE_PIN 17
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_ANTSEL_PIN - Pin number, selecting Antenna output of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_ANTSEL_PIN
-#define FEM_CONTROL_DEFAULT_ANTSEL_PIN 20
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_MOSI_PIN - Pin number, attached to MOSI pin of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_MOSI_PIN
-#define FEM_CONTROL_DEFAULT_MOSI_PIN 45
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_MISO_PIN - Pin number, attached to MISO pin of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_MISO_PIN
-#define FEM_CONTROL_DEFAULT_MISO_PIN 46
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_CLK_PIN - Pin number, attached to CLK pin of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_CLK_PIN
-#define FEM_CONTROL_DEFAULT_CLK_PIN 47
-#endif
-
-// <o> FEM_CONTROL_DEFAULT_CSN_PIN - Pin number, attached to CS pin of the FEM module 
-#ifndef FEM_CONTROL_DEFAULT_CSN_PIN
-#define FEM_CONTROL_DEFAULT_CSN_PIN 21
-#endif
-
-// <q> FEM_CONTROL_DEFAULT_ENABLE  - Enables FEM control on GPIO pins by default
+// <q> NRFX_SAADC_CONFIG_LP_MODE  - Enabling low power mode
  
 
-#ifndef FEM_CONTROL_DEFAULT_ENABLE
-#define FEM_CONTROL_DEFAULT_ENABLE 0
+#ifndef NRFX_SAADC_CONFIG_LP_MODE
+#define NRFX_SAADC_CONFIG_LP_MODE 0
 #endif
 
-// </h> 
+// <o> NRFX_SAADC_CONFIG_IRQ_PRIORITY  - Interrupt priority
+ 
+// <0=> 0 (highest) 
+// <1=> 1 
+// <2=> 2 
+// <3=> 3 
+// <4=> 4 
+// <5=> 5 
+// <6=> 6 
+// <7=> 7 
+
+#ifndef NRFX_SAADC_CONFIG_IRQ_PRIORITY
+#define NRFX_SAADC_CONFIG_IRQ_PRIORITY 6
+#endif
+
+// <e> NRFX_SAADC_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
+#ifndef NRFX_SAADC_CONFIG_LOG_ENABLED
+#define NRFX_SAADC_CONFIG_LOG_ENABLED 0
+#endif
+// <o> NRFX_SAADC_CONFIG_LOG_LEVEL  - Default Severity level
+ 
+// <0=> Off 
+// <1=> Error 
+// <2=> Warning 
+// <3=> Info 
+// <4=> Debug 
+
+#ifndef NRFX_SAADC_CONFIG_LOG_LEVEL
+#define NRFX_SAADC_CONFIG_LOG_LEVEL 3
+#endif
+
+// <o> NRFX_SAADC_CONFIG_INFO_COLOR  - ANSI escape code prefix.
+ 
+// <0=> Default 
+// <1=> Black 
+// <2=> Red 
+// <3=> Green 
+// <4=> Yellow 
+// <5=> Blue 
+// <6=> Magenta 
+// <7=> Cyan 
+// <8=> White 
+
+#ifndef NRFX_SAADC_CONFIG_INFO_COLOR
+#define NRFX_SAADC_CONFIG_INFO_COLOR 0
+#endif
+
+// <o> NRFX_SAADC_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
+ 
+// <0=> Default 
+// <1=> Black 
+// <2=> Red 
+// <3=> Green 
+// <4=> Yellow 
+// <5=> Blue 
+// <6=> Magenta 
+// <7=> Cyan 
+// <8=> White 
+
+#ifndef NRFX_SAADC_CONFIG_DEBUG_COLOR
+#define NRFX_SAADC_CONFIG_DEBUG_COLOR 0
+#endif
+
+// </e>
+
+// </e>
 
 // </h> 
 //==========================================================

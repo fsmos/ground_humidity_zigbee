@@ -1,80 +1,41 @@
-/**
- * Copyright (c) 2018 - 2020, Nordic Semiconductor ASA
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
- *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
-/** @file
- *
- * @defgroup zigbee_examples_multi_sensor main.c
- * @{
- * @ingroup zigbee_examples
- * @brief Zigbee Pressure and Temperature sensor
- */
-
 #include "zboss_api.h"
+#include "zboss_api_core.h"
 #include "zb_mem_config_med.h"
 #include "zb_error_handler.h"
 #include "zigbee_helpers.h"
 #include "app_timer.h"
 #include "bsp.h"
 #include "boards.h"
-#include "sensorsim.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
 #include "zb_multi_sensor.h"
+#include "nrf_802154.h"
+#include "ADC.h"
+#include "PWS.h"
+#include "custom_board.h"
 
-#define IEEE_CHANNEL_MASK                  (1l << ZIGBEE_CHANNEL)               /**< Scan only one, predefined channel to find the coordinator. */
+#define IEEE_CHANNEL_MASK                  ZB_TRANSCEIVER_ALL_CHANNELS_MASK     /**< Scan all channel to find the coordinator. */
 #define ERASE_PERSISTENT_CONFIG            ZB_FALSE                             /**< Do not erase NVRAM to save the network parameters after device reboot or power-off. */
 
-#define ZIGBEE_NETWORK_STATE_LED           BSP_BOARD_LED_2                      /**< LED indicating that light switch successfully joind Zigbee network. */
+#define ZIGBEE_NETWORK_STATE_LED           BSP_BOARD_LED_1                      /**< LED indicating that light switch successfully joind ZigBee network. */
+#define LEAVE_JOIN_BUTTON                  BSP_BOARD_BUTTON_0                   /**< Button ID used to join to network and leave from network*/
+#define LEAVE_JOIN_BUTTON_THRESHOLD        ZB_TIME_ONE_SECOND*4                      /**< Number of beacon intervals the button should be pressed to dimm the light bulb. */
+#define LEAVE_JOIN_BUTTON_SHORT_POLL_TMO   ZB_MILLISECONDS_TO_BEACON_INTERVAL(50)  /**< Delay between button state checks used in order to detect button long press. */
+#define LEAVE_JOIN_BUTTON_LONG_POLL_TMO    ZB_MILLISECONDS_TO_BEACON_INTERVAL(300) /**< Time after which the button state is checked again to detect button hold - the dimm command is sent again. */
+#define LED_BLINK                          ZB_MILLISECONDS_TO_BEACON_INTERVAL(100) /**< Led on-off timeout. */
 
-#define MIN_TEMPERATURE_VALUE              0                                    /**< Minimum temperature value as returned by the simulated measurement function. */
-#define MAX_TEMPERATURE_VALUE              4000                                 /**< Maximum temperature value as returned by the simulated measurement function. */
-#define TEMPERATURE_VALUE_INCREMENT        50                                   /**< Value by which the temperature value is incremented/decremented for each call to the simulated measurement function. */
-#define MIN_PRESSURE_VALUE                 700                                  /**< Minimum pressure value as returned by the simulated measurement function. */
-#define MAX_PRESSURE_VALUE                 1100                                 /**< Maximum pressure value as returned by the simulated measurement function. */
-#define PRESSURE_VALUE_INCREMENT           5                                    /**< Value by which the temperature value is incremented/decremented for each call to the simulated measurement function. */
+static zb_bool_t in_progress;
+static zb_bool_t joined;
+static zb_time_t timestamp;
+static zb_int16_t light=0;
 
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE to compile End Device source code.
 #endif
+
 
 static sensor_device_ctx_t m_dev_ctx;
 
@@ -93,24 +54,22 @@ ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(basic_attr_list,
                                      &m_dev_ctx.basic_attr.ph_env,
                                      m_dev_ctx.basic_attr.sw_ver);
 
+ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(humydity_attr_list, 
+                                            &m_dev_ctx.humm_attr.measure_value,
+                                            &m_dev_ctx.humm_attr.min_measure_value, 
+                                            &m_dev_ctx.humm_attr.max_measure_value);
 
-ZB_ZCL_DECLARE_TEMP_MEASUREMENT_ATTRIB_LIST(temperature_attr_list, 
-                                            &m_dev_ctx.temp_attr.measure_value,
-                                            &m_dev_ctx.temp_attr.min_measure_value, 
-                                            &m_dev_ctx.temp_attr.max_measure_value, 
-                                            &m_dev_ctx.temp_attr.tolerance);
 
-ZB_ZCL_DECLARE_PRES_MEASUREMENT_ATTRIB_LIST(pressure_attr_list, 
-                                            &m_dev_ctx.pres_attr.measure_value, 
-                                            &m_dev_ctx.pres_attr.min_measure_value, 
-                                            &m_dev_ctx.pres_attr.max_measure_value, 
-                                            &m_dev_ctx.pres_attr.tolerance);
+ZB_ZCL_DECLARE_POWER_CONFIG_SIMPLIFIED_ATTRIB_LIST(battery_simplified_attr_list, 
+                                            &m_dev_ctx.power_attr.battery_voltage,
+                                            &m_dev_ctx.power_attr.battery_remaining_percentage,
+                                            &m_dev_ctx.power_attr.alarm_state);
 
 ZB_DECLARE_MULTI_SENSOR_CLUSTER_LIST(multi_sensor_clusters,
                                      basic_attr_list,
                                      identify_attr_list,
-                                     temperature_attr_list,
-                                     pressure_attr_list);
+                                     humydity_attr_list,
+                                     battery_simplified_attr_list);
 
 ZB_ZCL_DECLARE_MULTI_SENSOR_EP(multi_sensor_ep,
                                MULTI_SENSOR_ENDPOINT,
@@ -118,13 +77,8 @@ ZB_ZCL_DECLARE_MULTI_SENSOR_EP(multi_sensor_ep,
 
 ZBOSS_DECLARE_DEVICE_CTX_1_EP(multi_sensor_ctx, multi_sensor_ep);
 
-
-static sensorsim_cfg_t   m_temperature_sim_cfg;                                 /**< Temperature sensor simulator configuration. */
-static sensorsim_state_t m_temperature_sim_state;                               /**< Temperature sensor simulator state. */
-static sensorsim_cfg_t   m_pressure_sim_cfg;                                    /**< Pressure sensor simulator configuration. */
-static sensorsim_state_t m_pressure_sim_state;                                  /**< Pressure sensor simulator state. */
-
 APP_TIMER_DEF(zb_app_timer);
+APP_TIMER_DEF(zb_app_timer_single);
 
 
 /**@brief Function for the Timer initialization.
@@ -190,17 +144,137 @@ static void multi_sensor_clusters_attr_init(void)
     /* Identify cluster attributes data */
     m_dev_ctx.identify_attr.identify_time        = ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE;
 
-    /* Temperature measurement cluster attributes data */
-    m_dev_ctx.temp_attr.measure_value            = ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_UNKNOWN;
-    m_dev_ctx.temp_attr.min_measure_value        = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_MIN_VALUE;
-    m_dev_ctx.temp_attr.max_measure_value        = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_MAX_VALUE;
-    m_dev_ctx.temp_attr.tolerance                = ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_MAX_VALUE;
+    /* humidity measurement cluster attributes data */
+    m_dev_ctx.humm_attr.measure_value            = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_UNKNOWN;
+    m_dev_ctx.humm_attr.min_measure_value        = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_MIN_VALUE;
+    m_dev_ctx.humm_attr.max_measure_value        = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_MAX_VALUE;
 
-    /* Pressure measurement cluster attributes data */
-    m_dev_ctx.pres_attr.measure_value            = ZB_ZCL_ATTR_PRES_MEASUREMENT_VALUE_UNKNOWN;
-    m_dev_ctx.pres_attr.min_measure_value        = ZB_ZCL_ATTR_PRES_MEASUREMENT_MIN_VALUE_MIN_VALUE;
-    m_dev_ctx.pres_attr.max_measure_value        = ZB_ZCL_ATTR_PRES_MEASUREMENT_MAX_VALUE_MAX_VALUE;
-    m_dev_ctx.pres_attr.tolerance                = ZB_ZCL_ATTR_PRES_MEASUREMENT_TOLERANCE_MAX_VALUE;
+
+    /* Voltage measurement cluster attributes data */
+    m_dev_ctx.power_attr.battery_voltage          = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
+    m_dev_ctx.power_attr.battery_remaining_percentage        = ZB_ZCL_POWER_CONFIG_BATTERY_REMAINING_UNKNOWN;
+    m_dev_ctx.power_attr.alarm_state              = ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_STATE_DEFAULT_VALUE;
+}
+
+
+/**@brief Led blink function
+ *
+ * @param[in]   count of blink
+ */
+static zb_void_t led_blink(zb_uint8_t count) 
+{
+    zb_ret_t zb_err_code;
+
+    count--;
+
+    if (count !=0)
+    {
+      bsp_board_led_invert(ZIGBEE_NETWORK_STATE_LED);
+      zb_err_code = ZB_SCHEDULE_APP_ALARM(led_blink, count, LED_BLINK);
+      ZB_ERROR_CHECK(zb_err_code);
+    }
+}
+ 
+
+/**@brief Callback for detecting button press duration.
+ *
+ * @param[in]   button   BSP Button that was pressed.
+ */
+static zb_void_t leave_join_button_handler(zb_uint8_t button)
+{
+    zb_time_t current_time;
+    zb_bool_t short_expired;
+    zb_bool_t  ret;
+    zb_ret_t zb_err_code;
+
+    current_time = ZB_TIMER_GET();
+
+    if (ZB_TIME_SUBTRACT(current_time, timestamp) > LEAVE_JOIN_BUTTON_THRESHOLD)
+    {
+        short_expired = ZB_TRUE;
+    }
+    else
+    {
+        short_expired = ZB_FALSE;
+    }
+
+    /* Check if button was released during LEAVE_JOIN_BUTTON_SHORT_POLL_TMO. */
+    if (!bsp_button_is_pressed(button))
+    {
+        if (!short_expired)
+        {
+            /* Check joined or not!!!. */
+            if (joined)
+            {
+              NRF_LOG_INFO("Short press. Joined, asking from network for new data");
+              zb_zdo_pim_start_turbo_poll_packets(2);
+              led_blink(1);
+            }
+            else
+            {
+              NRF_LOG_INFO("Short press. Not joined, starting join attempt");
+              ret = bdb_start_top_level_commissioning(ZB_BDB_NETWORK_STEERING);
+            }            
+        }
+
+        /* Button released - wait for accept next event. */
+        in_progress = ZB_FALSE;
+    }
+    else
+    {
+        if (short_expired)
+        {
+           if (joined)
+            {
+              NRF_LOG_INFO("Long press. Leaving from network - and soft reset");
+              zb_bdb_reset_via_local_action(0);
+              NVIC_SystemReset();
+            }
+            else
+            {
+              NRF_LOG_INFO("Long press. Not joined");
+            }
+            /* Long press detected - wait for accept next event. */
+            in_progress = ZB_FALSE;
+        }
+        else
+        {
+            /* Wait another LEAVE_JOIN_BUTTON_SHORT_POLL_TMO, until LEAVE_JOIN_BUTTON_THRESHOLD will be reached. */
+            zb_err_code = ZB_SCHEDULE_APP_ALARM(leave_join_button_handler, button, LEAVE_JOIN_BUTTON_SHORT_POLL_TMO);
+            ZB_ERROR_CHECK(zb_err_code);
+        }
+    }
+}
+
+
+/**@brief Callback for button events.
+ *
+ * @param[in]   evt      Incoming event from the BSP subsystem.
+ */
+static void buttons_handler(bsp_event_t evt)
+{
+    zb_ret_t zb_err_code;
+    zb_uint32_t button;
+
+    switch(evt)
+    {
+        case BSP_EVENT_KEY_0:
+            button = LEAVE_JOIN_BUTTON;
+            break;
+
+        default:
+            NRF_LOG_INFO("Unhandled BSP Event received: %d", evt);
+            return;
+    }
+
+    if (!in_progress)
+    {
+        in_progress = ZB_TRUE;
+        timestamp = ZB_TIMER_GET();
+
+        zb_err_code = ZB_SCHEDULE_APP_ALARM(leave_join_button_handler, button, LEAVE_JOIN_BUTTON_SHORT_POLL_TMO);
+        ZB_ERROR_CHECK(zb_err_code);
+    }
 }
 
 /**@brief Function for initializing LEDs.
@@ -209,11 +283,64 @@ static zb_void_t leds_init(void)
 {
     ret_code_t error_code;
 
-    /* Initialize LEDs and buttons - use BSP to control them. */
-    error_code = bsp_init(BSP_INIT_LEDS, NULL);
+     /* Initialize LEDs and buttons - use BSP to control them. */
+    error_code = bsp_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS, buttons_handler);
+//    error_code = bsp_init(BSP_INIT_LEDS,NULL);
     APP_ERROR_CHECK(error_code);
 
     bsp_board_leds_off();
+}
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+/**@brief Function for handling nrf app timer.
+ * 
+ * @param[IN]   context   Void pointer to context function is called with.
+ * 
+ * @details Function is called with pointer to sensor_device_ep_ctx_t as argument.
+ */
+static void zb_app_timer_measure_send(void * context)
+{
+    zb_zcl_status_t zcl_status;
+    static zb_int16_t new_humm_value;
+    static zb_int8_t new_voltage_value;
+    /* Get battery voltage                     */
+    int16_t VBAT = GetBatteryVoltage();
+    NRF_LOG_INFO("Battery voltage %d.", VBAT);
+    int16_t PWS = GetPWS();
+    NRF_LOG_INFO("PWS: %d", PWS);
+    int16_t resultPWS = map(PWS, VBAT, 1400, 0,100);
+    NRF_LOG_INFO("PWS percent: %d", resultPWS);
+    nrf_gpio_pin_set(PIN_POWER_PWS);
+    /* Get new humm measured value */
+    new_humm_value = (zb_int16_t)(resultPWS);
+    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, 
+                                     (zb_uint8_t *)&new_humm_value, 
+                                     ZB_FALSE);
+    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        NRF_LOG_INFO("Set humm value fail. zcl_status: %d", zcl_status);
+    }
+
+    /* Get new voltage measured value */
+    new_voltage_value =   (zb_int8_t)(VBAT / 100);
+    zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_POWER_CONFIG, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, 
+                                     (zb_uint8_t *)&new_voltage_value, 
+                                     ZB_FALSE);
+    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        NRF_LOG_INFO("Set voltage value fail. zcl_status: %d", zcl_status);
+    }
+
 }
 
 /**@brief Function for handling nrf app timer.
@@ -224,92 +351,84 @@ static zb_void_t leds_init(void)
  */
 static void zb_app_timer_handler(void * context)
 {
-    zb_zcl_status_t zcl_status;
-    static zb_int16_t new_temp_value, new_pres_value;
-
-    /* Get new temperature measured value */
-    new_temp_value = (zb_int16_t)sensorsim_measure(&m_temperature_sim_state, &m_temperature_sim_cfg);
-    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT, 
-                                     ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, 
-                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
-                                     ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, 
-                                     (zb_uint8_t *)&new_temp_value, 
-                                     ZB_FALSE);
-    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
-    {
-        NRF_LOG_INFO("Set temperature value fail. zcl_status: %d", zcl_status);
-    }
-
-    /* Get new pressure measured value */
-    new_pres_value = (zb_int16_t)sensorsim_measure(&m_pressure_sim_state, &m_pressure_sim_cfg);
-    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
-                                     ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, 
-                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
-                                     ZB_ZCL_ATTR_PRES_MEASUREMENT_VALUE_ID, 
-                                     (zb_uint8_t *)&new_pres_value, 
-                                     ZB_FALSE);
-    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
-    {
-        NRF_LOG_INFO("Set pressure value fail. zcl_status: %d", zcl_status);
-    }
-}
-
-/**@brief Function for initializing the sensor simulators.
- */
-static void sensor_simulator_init(void)
-{
-    m_temperature_sim_cfg.min          = MIN_TEMPERATURE_VALUE;
-    m_temperature_sim_cfg.max          = MAX_TEMPERATURE_VALUE;
-    m_temperature_sim_cfg.incr         = TEMPERATURE_VALUE_INCREMENT;
-    m_temperature_sim_cfg.start_at_max = false;
-
-    sensorsim_init(&m_temperature_sim_state, &m_temperature_sim_cfg);
-
-    m_pressure_sim_cfg.min          = MIN_PRESSURE_VALUE;
-    m_pressure_sim_cfg.max          = MAX_PRESSURE_VALUE;
-    m_pressure_sim_cfg.incr         = PRESSURE_VALUE_INCREMENT;
-    m_pressure_sim_cfg.start_at_max = false;
-
-    sensorsim_init(&m_pressure_sim_state, &m_pressure_sim_cfg);
+    nrf_gpio_pin_clear(PIN_POWER_PWS);
+    ret_code_t err_code = app_timer_start(zb_app_timer_single, APP_TIMER_TICKS(500), NULL);
+    APP_ERROR_CHECK(err_code);    
 }
 
 
-/**@brief Zigbee stack event handler.
+
+/**@brief ZigBee stack event handler.
  *
- * @param[in]   bufid   Reference to the Zigbee stack buffer used to pass signal.
+ * @param[in]   param   Reference to ZigBee stack buffer used to pass arguments (signal).
  */
-void zboss_signal_handler(zb_bufid_t bufid)
+void zboss_signal_handler(zb_bufid_t param)
 {
     zb_zdo_app_signal_hdr_t  * p_sg_p      = NULL;
-    zb_zdo_app_signal_type_t   sig         = zb_get_app_signal(bufid, &p_sg_p);
-    zb_ret_t                   status      = ZB_GET_APP_SIGNAL_STATUS(bufid);
-
-    /* Update network status LED */
-    zigbee_led_status_update(bufid, ZIGBEE_NETWORK_STATE_LED);
+    zb_zdo_app_signal_type_t   sig         = zb_get_app_signal(param, &p_sg_p);
+    zb_ret_t                   status      = ZB_GET_APP_SIGNAL_STATUS(param);
+    zb_bool_t                  comm_status;
 
     switch (sig)
     {
+        case ZB_BDB_SIGNAL_DEVICE_FIRST_START:
         case ZB_BDB_SIGNAL_DEVICE_REBOOT:
-            /* fall-through */
-        case ZB_BDB_SIGNAL_STEERING:
-            /* Call default signal handler. */
-            ZB_ERROR_CHECK(zigbee_default_signal_handler(bufid));
             if (status == RET_OK)
             {
-                ret_code_t err_code = app_timer_start(zb_app_timer, APP_TIMER_TICKS(1000), NULL);
+                NRF_LOG_INFO("Joined network successfully");
+                joined = ZB_TRUE;
+                led_blink(3);
+                /* timeout for receiving data from sensor and voltage from battery */
+                ret_code_t err_code = app_timer_start(zb_app_timer, APP_TIMER_TICKS(5000), NULL);
                 APP_ERROR_CHECK(err_code);
+                /* change data request timeout */
+                zb_zdo_pim_set_long_poll_interval(60000);
+            }
+            else
+            {
+                led_blink(5);
+                NRF_LOG_ERROR("Failed to join network. Status: %d", status);
+                joined = ZB_FALSE;
+            }
+            break;
+
+        case ZB_ZDO_SIGNAL_LEAVE:
+            if (status == RET_OK)
+            {
+                joined = ZB_FALSE;
+                led_blink(7);
+                ret_code_t err_code = app_timer_stop(zb_app_timer);
+                APP_ERROR_CHECK(err_code);
+                zb_zdo_signal_leave_params_t *p_leave_params = ZB_ZDO_SIGNAL_GET_PARAMS(p_sg_p, zb_zdo_signal_leave_params_t);
+                NRF_LOG_INFO("Network left. Leave type: %d", p_leave_params->leave_type);
+            }
+            else
+            {
+                NRF_LOG_ERROR("Unable to leave network. Status: %d", status);
+            }
+            break;
+
+
+        case ZB_COMMON_SIGNAL_CAN_SLEEP:
+            zb_sleep_now();
+            break;
+
+        case ZB_ZDO_SIGNAL_PRODUCTION_CONFIG_READY:
+            if (status != RET_OK)
+            {
+                NRF_LOG_WARNING("Production config is not present or invalid");
             }
             break;
 
         default:
-            /* Call default signal handler. */
-            ZB_ERROR_CHECK(zigbee_default_signal_handler(bufid));
+            /* Unhandled signal. For more information see: zb_zdo_app_signal_type_e and zb_ret_e */
+            NRF_LOG_INFO("Unhandled signal %d. Status: %d", sig, status);
             break;
     }
 
-    if (bufid)
+    if (param)
     {
-        zb_buf_free(bufid);
+       zb_buf_free(param);
     }
 }
 
@@ -320,24 +439,25 @@ int main(void)
     zb_ret_t       zb_err_code;
     ret_code_t     err_code;
     zb_ieee_addr_t ieee_addr;
-
+    NRF_POWER->DCDCEN = 1;
     /* Initialize loging system and GPIOs. */
     timers_init();
     log_init();
-    sensor_simulator_init();
-    leds_init();
-
+    nrf_gpio_cfg_output(PIN_POWER_PWS);
+    nrf_gpio_pin_set(PIN_POWER_PWS);
     /* Create Timer for reporting attribute */
     err_code = app_timer_create(&zb_app_timer, APP_TIMER_MODE_REPEATED, zb_app_timer_handler);
     APP_ERROR_CHECK(err_code);
-
-    /* Set Zigbee stack logging level and traffic dump subsystem. */
+    err_code = app_timer_create(&zb_app_timer_single, APP_TIMER_MODE_SINGLE_SHOT, zb_app_timer_measure_send);
+    APP_ERROR_CHECK(err_code);
+    err_code = app_timer_start(zb_app_timer_single, APP_TIMER_TICKS(1), NULL);
+    APP_ERROR_CHECK(err_code);   
+    /* Set ZigBee stack logging level and traffic dump subsystem. */
     ZB_SET_TRACE_LEVEL(ZIGBEE_TRACE_LEVEL);
     ZB_SET_TRACE_MASK(ZIGBEE_TRACE_MASK);
     ZB_SET_TRAF_DUMP_OFF();
-
-    /* Initialize Zigbee stack. */
-    ZB_INIT("multi_sensor");
+    /* Initialize ZigBee stack. */
+    ZB_INIT("pws_sensor");
 
     /* Set device address to the value read from FICR registers. */
     zb_osif_get_ieee_eui64(ieee_addr);
@@ -347,8 +467,10 @@ int main(void)
     zb_set_network_ed_role(IEEE_CHANNEL_MASK);
     zigbee_erase_persistent_storage(ERASE_PERSISTENT_CONFIG);
 
+    leds_init();
+
     zb_set_ed_timeout(ED_AGING_TIMEOUT_64MIN);
-    zb_set_keepalive_timeout(ZB_MILLISECONDS_TO_BEACON_INTERVAL(3000));
+    zb_set_keepalive_timeout(ZB_MILLISECONDS_TO_BEACON_INTERVAL(60000));
     zb_set_rx_on_when_idle(ZB_FALSE);
 
     /* Initialize application context structure. */
@@ -359,9 +481,10 @@ int main(void)
 
     /* Initialize sensor device attibutes */
     multi_sensor_clusters_attr_init();
-
+    /*set tx power +8dbM */
+    nrf_802154_tx_power_set(8);
     /** Start Zigbee Stack. */
-    zb_err_code = zboss_start_no_autostart();
+    zb_err_code = zboss_start();
     ZB_ERROR_CHECK(zb_err_code);
 
     while(1)
