@@ -225,17 +225,15 @@ static zb_void_t leave_join_button_handler(zb_uint8_t button)
     {
         if (short_expired)
         {
-           if (joined)
-            {
+
               NRF_LOG_INFO("Long press. Leaving from network - and soft reset");
-              zb_bdb_reset_via_local_action(0);
-              NVIC_SystemReset();
-            }
-            else
-            {
-              NRF_LOG_INFO("Long press. Not joined");
-            }
-            /* Long press detected - wait for accept next event. */
+              zb_nvram_erase();
+              if (!zb_bdb_is_factory_new())
+              {
+                zb_zdo_rejoin_backoff_start(ZB_FALSE);
+              }
+              //zb_bdb_reset_via_local_action(0);
+              //NVIC_SystemReset();
             in_progress = ZB_FALSE;
         }
         else
