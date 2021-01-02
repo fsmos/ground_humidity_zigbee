@@ -41,7 +41,7 @@ extern "C" {
 #define BSP_LED_0      29
 #define BSP_LED_1      31
 #define BSP_LED_2      30
-
+#define BSP_LED_OD_MODE      GPIO_PIN_CNF_DRIVE_S0D1
 
 #define BUTTONS_NUMBER 1
 

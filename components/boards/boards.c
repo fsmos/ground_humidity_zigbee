@@ -139,7 +139,11 @@ static void bsp_board_leds_init(void)
     uint32_t i;
     for (i = 0; i < LEDS_NUMBER; ++i)
     {
-        nrf_gpio_cfg_output(m_board_led_list[i]);
+        nrf_gpio_cfg(m_board_led_list[i],NRF_GPIO_PIN_DIR_OUTPUT,
+        NRF_GPIO_PIN_INPUT_DISCONNECT,
+        NRF_GPIO_PIN_NOPULL,
+        BSP_LED_OD_MODE,
+        NRF_GPIO_PIN_NOSENSE);
     }
     bsp_board_leds_off();
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="zigbee_multi_sensor_pca10056" target="8" version="2">
-  <project Name="zigbee_multi_sensor_pca10056">
+  <project Name="ground_humidity_zigbee">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
