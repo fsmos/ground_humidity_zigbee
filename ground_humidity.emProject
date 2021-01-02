@@ -116,6 +116,7 @@
       <file file_name="custom_board.h" />
       <file file_name="ADC.c" />
       <file file_name="PWS.c" />
+      <file file_name="zigbee_lacking.h" />
     </folder>
     <folder Name="None">
       <file file_name="./modules/nrfx/mdk/ses_startup_nrf52840.s" />
