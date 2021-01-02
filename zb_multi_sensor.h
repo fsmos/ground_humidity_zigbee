@@ -32,7 +32,7 @@ typedef struct
     battery_simplified_attr_t                 power_attr;
 } sensor_device_ctx_t;
 
-#define ZB_MULTI_SENSOR_REPORT_ATTR_COUNT  3
+#define ZB_MULTI_SENSOR_REPORT_ATTR_COUNT  2
 #define ZB_DEVICE_VER_MULTI_SENSOR         0                                    /**< Multisensor device version. */
 #define ZB_MULTI_SENSOR_IN_CLUSTER_NUM     4                                    /**< Number of the input (server) clusters in the multisensor device. */
 #define ZB_MULTI_SENSOR_OUT_CLUSTER_NUM    1                                    /**< Number of the output (client) clusters in the multisensor device. */

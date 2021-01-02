@@ -60,10 +60,13 @@ ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(humydity_attr_list,
                                             &m_dev_ctx.humm_attr.max_measure_value);
 
 
-ZB_ZCL_DECLARE_POWER_CONFIG_SIMPLIFIED_ATTRIB_LIST(battery_simplified_attr_list, 
-                                            &m_dev_ctx.power_attr.battery_voltage,
-                                            &m_dev_ctx.power_attr.battery_remaining_percentage,
-                                            &m_dev_ctx.power_attr.alarm_state);
+ZB_ZCL_DECLARE_POWER_CONFIG_ATTRIB_LIST(battery_simplified_attr_list,
+                                            &m_dev_ctx.power_attr.voltage ,
+                                            &m_dev_ctx.power_attr.size,
+                                            &m_dev_ctx.power_attr.quantity,
+                                            &m_dev_ctx.power_attr.rated_voltage,
+                                            &m_dev_ctx.power_attr.alarm_mask,
+                                            &m_dev_ctx.power_attr.voltage_min_threshold);
 
 ZB_DECLARE_MULTI_SENSOR_CLUSTER_LIST(multi_sensor_clusters,
                                      basic_attr_list,
@@ -151,9 +154,12 @@ static void multi_sensor_clusters_attr_init(void)
 
 
     /* Voltage measurement cluster attributes data */
-    m_dev_ctx.power_attr.battery_voltage          = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
-    m_dev_ctx.power_attr.battery_remaining_percentage        = ZB_ZCL_POWER_CONFIG_BATTERY_REMAINING_UNKNOWN;
-    m_dev_ctx.power_attr.alarm_state              = ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_STATE_DEFAULT_VALUE;
+    m_dev_ctx.power_attr.voltage = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
+    m_dev_ctx.power_attr.quantity = 1;
+    m_dev_ctx.power_attr.rated_voltage = 2800;
+    m_dev_ctx.power_attr.voltage_min_threshold = 2000;
+    m_dev_ctx.power_attr.size = ZB_ZCL_POWER_CONFIG_BATTERY_SIZE_OTHER;
+    m_dev_ctx.power_attr.alarm_mask = ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_MASK_VOLTAGE_LOW;
 }
 
 
@@ -329,7 +335,7 @@ static void zb_app_timer_measure_send(void * context)
 
     /* Get new voltage measured value */
     new_voltage_value =   (zb_int8_t)(VBAT / 100);
-    zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+    zcl_status =  zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
                                      ZB_ZCL_CLUSTER_ID_POWER_CONFIG, 
                                      ZB_ZCL_CLUSTER_SERVER_ROLE, 
                                      ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, 
@@ -372,8 +378,9 @@ void zboss_signal_handler(zb_bufid_t param)
     
     switch (sig)
     {
-        case ZB_BDB_SIGNAL_DEVICE_FIRST_START:
         case ZB_BDB_SIGNAL_DEVICE_REBOOT:
+        case ZB_BDB_SIGNAL_STEERING:
+            ZB_ERROR_CHECK(zigbee_default_signal_handler(param));
             if (status == RET_OK)
             {
                 NRF_LOG_INFO("Joined network successfully");
@@ -383,7 +390,7 @@ void zboss_signal_handler(zb_bufid_t param)
                 ret_code_t err_code = app_timer_start(zb_app_timer, APP_TIMER_TICKS(5000), NULL);
                 APP_ERROR_CHECK(err_code);
                 /* change data request timeout */
-                zb_zdo_pim_set_long_poll_interval(60000);
+                //zb_zdo_pim_set_long_poll_interval(60000);
             }
             else
             {
@@ -392,7 +399,6 @@ void zboss_signal_handler(zb_bufid_t param)
                 joined = ZB_FALSE;
             }
             break;
-
         case ZB_ZDO_SIGNAL_LEAVE:
             if (status == RET_OK)
             {
@@ -410,20 +416,9 @@ void zboss_signal_handler(zb_bufid_t param)
             break;
 
 
-        case ZB_COMMON_SIGNAL_CAN_SLEEP:
-            zb_sleep_now();
-            break;
-
-        case ZB_ZDO_SIGNAL_PRODUCTION_CONFIG_READY:
-            if (status != RET_OK)
-            {
-                NRF_LOG_WARNING("Production config is not present or invalid");
-            }
-            break;
-
         default:
             /* Unhandled signal. For more information see: zb_zdo_app_signal_type_e and zb_ret_e */
-            NRF_LOG_INFO("Unhandled signal %d. Status: %d", sig, status);
+            ZB_ERROR_CHECK(zigbee_default_signal_handler(param));
             break;
     }
 
@@ -451,14 +446,16 @@ int main(void)
     APP_ERROR_CHECK(err_code);
     err_code = app_timer_create(&zb_app_timer_single, APP_TIMER_MODE_SINGLE_SHOT, zb_app_timer_measure_send);
     APP_ERROR_CHECK(err_code);
-    err_code = app_timer_start(zb_app_timer_single, APP_TIMER_TICKS(1), NULL);
-    APP_ERROR_CHECK(err_code);   
+    //err_code = app_timer_start(zb_app_timer_single, APP_TIMER_TICKS(1), NULL);
+    //APP_ERROR_CHECK(err_code);   
     /* Set ZigBee stack logging level and traffic dump subsystem. */
     ZB_SET_TRACE_LEVEL(ZIGBEE_TRACE_LEVEL);
     ZB_SET_TRACE_MASK(ZIGBEE_TRACE_MASK);
     ZB_SET_TRAF_DUMP_OFF();
+
+
     /* Initialize ZigBee stack. */
-    ZB_INIT("pws_sensor");
+    ZB_INIT("multi_sensor");
 
     /* Set device address to the value read from FICR registers. */
     zb_osif_get_ieee_eui64(ieee_addr);
@@ -485,7 +482,7 @@ int main(void)
     /*set tx power +8dbM */
     nrf_802154_tx_power_set(8);
     /** Start Zigbee Stack. */
-    zb_err_code = zboss_start();
+    zb_err_code = zboss_start_no_autostart();
     ZB_ERROR_CHECK(zb_err_code);
 
     while(1)

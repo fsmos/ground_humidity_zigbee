@@ -87,7 +87,7 @@
 // <i> Trace level of Zigbee stack binary logs. Possible values: 0 - disable, 1 - error, 2 - warning, 3 - info, 4 - debug. Disabled by default.
 
 #ifndef ZIGBEE_TRACE_LEVEL
-#define ZIGBEE_TRACE_LEVEL 0
+#define ZIGBEE_TRACE_LEVEL 4
 #endif
 
 // <o> ZIGBEE_TRACE_MASK - Trace mask of Zigbee stack logs.  <0-2376> 
@@ -96,7 +96,7 @@
 // <i> Selectively enable Zigbee binary trace logs. Possible values (logical or): TRACE_SUBSYSTEM_ZCL, TRACE_SUBSYSTEM_ZDO, TRACE_SUBSYSTEM_NWK. Defaults to 0x0000.
 
 #ifndef ZIGBEE_TRACE_MASK
-#define ZIGBEE_TRACE_MASK 0
+#define ZIGBEE_TRACE_MASK TRACE_SUBSYSTEM_ZCL | TRACE_SUBSYSTEM_ZDO | TRACE_SUBSYSTEM_NWK
 #endif
 
 // <o> ZIGBEE_TIMER_INSTANCE_NO - nRF timer instance used by Zigbee stack 

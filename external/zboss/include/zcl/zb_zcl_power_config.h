@@ -614,12 +614,12 @@ enum zb_zcl_power_config_battery_alarm_state_e
 #define ZB_ZCL_DECLARE_POWER_CONFIG_ATTRIB_LIST(attr_list,                                  \
     voltage, size, quantity, rated_voltage, alarm_mask, voltage_min_threshold)              \
   ZB_ZCL_START_DECLARE_ATTRIB_LIST(attr_list)                                               \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, (voltage))              \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_SIZE_ID, (size))                    \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_QUANTITY_ID, (quantity))            \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_RATED_VOLTAGE_ID, (rated_voltage))  \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_ALARM_MASK_ID, (alarm_mask ))       \
-  ZB_ZCL_SET_ATTR_DESC(ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_MIN_THRESHOLD_ID, (voltage_min_threshold))  \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID(voltage,),              \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_SIZE_ID(size,),                    \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_QUANTITY_ID(quantity,),            \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_RATED_VOLTAGE_ID(rated_voltage,),  \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_ALARM_MASK_ID(alarm_mask,),       \
+  ZB_SET_ATTR_DESCR_WITH_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_MIN_THRESHOLD_ID(voltage_min_threshold,),  \
   ZB_ZCL_FINISH_DECLARE_ATTRIB_LIST
 
 /** @cond internals_doc */
