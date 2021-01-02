@@ -19,7 +19,8 @@
 #define IEEE_CHANNEL_MASK                  ZB_TRANSCEIVER_ALL_CHANNELS_MASK     /**< Scan all channel to find the coordinator. */
 #define ERASE_PERSISTENT_CONFIG            ZB_FALSE                             /**< Do not erase NVRAM to save the network parameters after device reboot or power-off. */
 
-#define ZIGBEE_NETWORK_STATE_LED           BSP_BOARD_LED_1                      /**< LED indicating that light switch successfully joind ZigBee network. */
+#define ZIGBEE_USER_LED           BSP_BOARD_LED_1                      /**< LED indicating that light switch successfully joind ZigBee network. */
+#define ZIGBEE_NETWORK_STATE_LED           BSP_BOARD_LED_2                      /**< LED indicating that light switch successfully joind ZigBee network. */
 #define LEAVE_JOIN_BUTTON                  BSP_BOARD_BUTTON_0                   /**< Button ID used to join to network and leave from network*/
 #define LEAVE_JOIN_BUTTON_THRESHOLD        ZB_TIME_ONE_SECOND*4                      /**< Number of beacon intervals the button should be pressed to dimm the light bulb. */
 #define LEAVE_JOIN_BUTTON_SHORT_POLL_TMO   ZB_MILLISECONDS_TO_BEACON_INTERVAL(50)  /**< Delay between button state checks used in order to detect button long press. */
@@ -168,7 +169,7 @@ static zb_void_t led_blink(zb_uint8_t count)
 
     if (count !=0)
     {
-      bsp_board_led_invert(ZIGBEE_NETWORK_STATE_LED);
+      bsp_board_led_invert(ZIGBEE_USER_LED);
       zb_err_code = ZB_SCHEDULE_APP_ALARM(led_blink, count, LED_BLINK);
       ZB_ERROR_CHECK(zb_err_code);
     }
@@ -187,6 +188,7 @@ static zb_void_t leave_join_button_handler(zb_uint8_t button)
     zb_ret_t zb_err_code;
 
     current_time = ZB_TIMER_GET();
+ 
 
     if (ZB_TIME_SUBTRACT(current_time, timestamp) > LEAVE_JOIN_BUTTON_THRESHOLD)
     {
@@ -367,7 +369,9 @@ void zboss_signal_handler(zb_bufid_t param)
     zb_zdo_app_signal_type_t   sig         = zb_get_app_signal(param, &p_sg_p);
     zb_ret_t                   status      = ZB_GET_APP_SIGNAL_STATUS(param);
     zb_bool_t                  comm_status;
-
+    
+    //zigbee_led_status_update(param, ZIGBEE_NETWORK_STATE_LED);
+    
     switch (sig)
     {
         case ZB_BDB_SIGNAL_DEVICE_FIRST_START:
