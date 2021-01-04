@@ -60,13 +60,10 @@ ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(humydity_attr_list,
                                             &m_dev_ctx.humm_attr.max_measure_value);
 
 
-ZB_ZCL_DECLARE_POWER_CONFIG_ATTRIB_LIST(battery_simplified_attr_list,
-                                            &m_dev_ctx.power_attr.voltage ,
-                                            &m_dev_ctx.power_attr.size,
-                                            &m_dev_ctx.power_attr.quantity,
-                                            &m_dev_ctx.power_attr.rated_voltage,
-                                            &m_dev_ctx.power_attr.alarm_mask,
-                                            &m_dev_ctx.power_attr.voltage_min_threshold);
+ZB_ZCL_DECLARE_POWER_CONFIG_SIMPLIFIED_ATTRIB_LIST(battery_simplified_attr_list, 
+                                            &m_dev_ctx.power_attr.battery_voltage,
+                                            &m_dev_ctx.power_attr.battery_remaining_percentage,
+                                            &m_dev_ctx.power_attr.alarm_state);
 
 ZB_DECLARE_MULTI_SENSOR_CLUSTER_LIST(multi_sensor_clusters,
                                      basic_attr_list,
@@ -154,12 +151,9 @@ static void multi_sensor_clusters_attr_init(void)
 
 
     /* Voltage measurement cluster attributes data */
-    m_dev_ctx.power_attr.voltage = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
-    m_dev_ctx.power_attr.quantity = 1;
-    m_dev_ctx.power_attr.rated_voltage = 2800;
-    m_dev_ctx.power_attr.voltage_min_threshold = 2000;
-    m_dev_ctx.power_attr.size = ZB_ZCL_POWER_CONFIG_BATTERY_SIZE_OTHER;
-    m_dev_ctx.power_attr.alarm_mask = ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_MASK_VOLTAGE_LOW;
+    m_dev_ctx.power_attr.battery_voltage          = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
+    m_dev_ctx.power_attr.battery_remaining_percentage        = ZB_ZCL_POWER_CONFIG_BATTERY_REMAINING_UNKNOWN;
+    m_dev_ctx.power_attr.alarm_state              = ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_STATE_DEFAULT_VALUE;
 }
 
 
